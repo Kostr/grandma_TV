@@ -141,7 +141,7 @@ class TV_show:
         #return frame_count/fps
         #return duration, frame_count
         media_info = MediaInfo.parse(self.name)
-        return media_info.tracks[0].duration
+        return float(media_info.tracks[0].duration)
         #result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
         #                                          "format=duration", "-of",
         #                                          "default=noprint_wrappers=1:nokey=1", self.name],
@@ -198,7 +198,8 @@ class TV:
                 durations = pickle.load(f)
         print("pickle loaded!")
         files_in_path = [os.path.join(path, name) for path, subdirs, files in os.walk(drive_path) for name in files]
-        videos_in_flash = [file_path for file_path in files_in_path if (file_path.endswith(".mkv") or file_path.endswith(".avi") or file_path.endswith(".mpg") or file_path.endswith(".m4v") or file_path.endswith(".ts")) ]
+        videos_in_flash = [file_path for file_path in files_in_path if (file_path.endswith(".mkv") or file_path.endswith(".AVI") or file_path.endswith(".avi") or file_path.endswith(".mpg") or file_path.endswith(".m4v") or file_path.endswith(".ts")) ]
+        photos_in_flash = [file_path for file_path in files_in_path if (file_path.endswith(".jpg") or file_path.endswith(".JPG"))] 
         for video in videos_in_flash:
             try:
                 channel_number = int(video[len(drive_path+'/Program_')])
@@ -211,8 +212,17 @@ class TV:
                     durations[last_show.name] = last_show.duration
                     with open(drive_path+'/durations.pickle', 'wb') as f:
                         pickle.dump(durations, f)
+            except Exception as e:
+                print(video)
+                print(e)
+                continue
+        for photo in photos_in_flash:
+            try:
+                channel_number = int(photo[len(drive_path+'/Program_')])
+                tv.add_TV_show(channel_number, photo, 10*1000)
             except:
                 continue
+ 
 
     def add_TV_show(self, channel, program, duration=0):
         if duration:
@@ -243,8 +253,11 @@ class TV:
 
         channel_time_int=int(channel_time)
         show_elapsed_time_str=self.show_time_as_str(channel_time_int)
-        show_duration_time_str=self.show_time_as_str(self.channels[self.active_channel][self.active_show].duration) 
-        self.player.video_set_marquee_string(m.Text, self.channels[self.active_channel][self.active_show].name[len("/media/pi/ASUS_HDD/Program_X/"):] + ' \n' + 'Прошло ' + show_elapsed_time_str + ' из ' + show_duration_time_str)
+        show_duration_time_str=self.show_time_as_str(self.channels[self.active_channel][self.active_show].duration)
+        if (self.channels[self.active_channel][self.active_show].duration == 10*1000):
+            self.player.video_set_marquee_string(m.Text, self.channels[self.active_channel][self.active_show].name[len("/media/pi/ASUS_HDD/Program_X/"):])
+        else:
+            self.player.video_set_marquee_string(m.Text, self.channels[self.active_channel][self.active_show].name[len("/media/pi/ASUS_HDD/Program_X/"):] + ' \n' + 'Прошло ' + show_elapsed_time_str + ' из ' + show_duration_time_str)
 
     def hide_title(self):
         m = vlc.VideoMarqueeOption
