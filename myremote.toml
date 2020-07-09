@@ -19,3 +19,6 @@ protocol = "sharp"
 0x1f5 = "KEY_LEFT"
 0x1f6 = "KEY_RIGHT"
 0x116 = "KEY_OK"
+0x111 = "KEY_CHANNELUP"
+0x112 = "KEY_CHANNELDOWN"
+

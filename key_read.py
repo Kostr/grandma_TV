@@ -292,6 +292,18 @@ class TV:
         time.sleep(1)
         self.player.video_set_spu(-1)
 
+    def next_channel(self):
+        if (self.active_channel==9):
+            self.play(0)
+        else:
+            self.play(self.active_channel+1)
+
+    def previous_channel(self):
+        if (self.active_channel==0):
+            self.play(9)
+        else:
+            self.play(self.active_channel-1)
+
     def play_ended(self):
         return self.player.get_state() == vlc.State.Ended
 
@@ -360,6 +372,7 @@ while True:
     for event in dev.read():
         # Print key pressed events only
         if event.type == ecodes.EV_KEY and event.value == 1:
+            #print(hex(event.code))
             if event.code == 0x201:
                 print("Channel was switched to 1")
                 tv.play(1)
@@ -390,6 +403,10 @@ while True:
             if event.code == 0x200:
                 print("Channel was switched to 0")
                 tv.play(0)
+            if event.code == 0x192:
+                tv.next_channel()
+            if event.code == 0x193:
+                tv.previous_channel()
             if event.code == 0x69:
                 tv.rewind_show_back()
             if event.code == 0x6a:
