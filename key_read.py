@@ -11,7 +11,7 @@ import vlc
 import os.path
 import time
 import pickle
-
+import re
 import subprocess
 #pip3 install moviepy - для определения размеров видео
 #sudo apt-get install libatlas-base-dev
@@ -262,10 +262,14 @@ class TV:
         channel_time_int=int(channel_time)
         show_elapsed_time_str=self.show_time_as_str(channel_time_int)
         show_duration_time_str=self.show_time_as_str(self.channels[self.active_channel][self.active_show].duration)
-        if (self.channels[self.active_channel][self.active_show].duration == 10*1000):
-            self.player.video_set_marquee_string(m.Text, self.channels[self.active_channel][self.active_show].name[len("/media/pi/ASUS_HDD/Program_X/"):])
-        else:
-            self.player.video_set_marquee_string(m.Text, self.channels[self.active_channel][self.active_show].name[len("/media/pi/ASUS_HDD/Program_X/"):] + ' \n' + 'Прошло ' + show_elapsed_time_str + ' из ' + show_duration_time_str)
+        show_title_match = re.search('/media/pi/.*/Program_.?/(.+?)(.mkv|.ts|.avi|.AVI|.mpg|.m4v)', self.channels[self.active_channel][self.active_show].name)
+        if show_title_match:
+            show_title = show_title_match.group(1)
+            show_title_pretty = show_title.replace('/','\n')
+            if (self.channels[self.active_channel][self.active_show].duration == 10*1000):
+               self.player.video_set_marquee_string(m.Text, show_title_pretty)
+            else:
+               self.player.video_set_marquee_string(m.Text, show_title_pretty + ' \n' + 'Прошло ' + show_elapsed_time_str + ' из ' + show_duration_time_str)
 
     def hide_title(self):
         m = vlc.VideoMarqueeOption
