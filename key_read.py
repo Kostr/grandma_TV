@@ -185,6 +185,7 @@ class TV:
             self.channels.append(TV_channel(ch))
         self.vlc_instance = vlc.Instance()
         self.player = self.vlc_instance.media_player_new()
+        self.feh_photo_instance=None
 
     def add_flash_drive(self, drive_path):
         while (not os.path.exists(drive_path)):
@@ -192,6 +193,13 @@ class TV:
             time.sleep(1)
         print("hdd is ready")
         time.sleep(1)
+
+        black_background_feh = subprocess.Popen(["feh", "-Y", "-F", "/home/pi/grandma_TV/black_background.jpg"],
+          stdout=subprocess.PIPE,
+          stderr=subprocess.STDOUT ,
+          env={"DISPLAY" : ":0", "XDG_RUNTIME_DIR" : "/run/user/1000"}
+        )
+
         durations={}
         if os.path.isfile(drive_path+'/durations.pickle'):
             with open(drive_path+'/durations.pickle', 'rb') as f:
@@ -283,14 +291,28 @@ class TV:
         self.active_show = show_number
         channel_time_int=int(channel_time)
 
-        Media = self.vlc_instance.media_new( self.channels[channel][show_number].name )
-        print(self.channels[channel][show_number].name)
-        self.player.set_media(Media)
-        self.player.set_fullscreen(True)
-        self.player.play()
-        self.player.set_time( int( channel_time_int) )
-        time.sleep(1)
-        self.player.video_set_spu(-1)
+        if (self.feh_photo_instance):
+            self.feh_photo_instance.kill()
+        file_name=self.channels[channel][show_number].name
+        if (file_name.endswith(".JPG") or (file_name.endswith(".jpg"))):
+            self.player.stop()
+
+            self.feh_photo_instance = subprocess.Popen(["feh", "-Y", "-F", file_name],
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT ,
+                  env={"DISPLAY" : ":0", "XDG_RUNTIME_DIR" : "/run/user/1000"}
+            )
+            print(self.channels[channel][show_number].name)
+            self.photo_time=time.time()
+        else:
+            Media = self.vlc_instance.media_new( self.channels[channel][show_number].name )
+            print(self.channels[channel][show_number].name)
+            self.player.set_media(Media)
+            self.player.set_fullscreen(True)
+            self.player.play()
+            self.player.set_time( int( channel_time_int) )
+            time.sleep(1)
+            self.player.video_set_spu(-1)
 
     def next_channel(self):
         if (self.active_channel==9):
@@ -305,7 +327,11 @@ class TV:
             self.play(self.active_channel-1)
 
     def play_ended(self):
-        return self.player.get_state() == vlc.State.Ended
+        file_name=self.channels[self.active_channel][self.active_show].name
+        if (file_name.endswith(".JPG") or (file_name.endswith(".jpg"))):
+            return (time.time() > (self.photo_time + 10))
+        else:
+            return self.player.get_state() == vlc.State.Ended
 
     def turn_off(self):
         self.player.stop()
@@ -360,6 +386,25 @@ tv.add_flash_drive(FLASH_PATH)
 tv.play(1)
 
 print("TV is on!")
+
+
+
+import signal
+import sys
+
+def signal_handler(signal, frame):
+  # your code here
+  if (tv.feh_photo_instance):
+      tv.feh_photo_instance.terminate()
+  if (black_background_feh):
+      black_background_feh.terminate()
+  sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
+
+
 
 while True:
     r, w, x = select([dev], [], [], 1)
