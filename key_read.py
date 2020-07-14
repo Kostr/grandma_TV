@@ -13,6 +13,9 @@ import time
 import pickle
 import re
 import subprocess
+
+#sudo apt-get install unclutter
+
 #pip3 install moviepy - для определения размеров видео
 #sudo apt-get install libatlas-base-dev
 
@@ -32,10 +35,6 @@ import subprocess
 #add：export LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
 #exit with save file.
 # source .bashrc
-
-#FLASH_PATH='/media/pi/Transcend'
-#FLASH_PATH='/media/pi/UUI'
-FLASH_PATH='/media/pi/ASUS_HDD'
 
 from pymediainfo import MediaInfo
 #import cv2
@@ -122,7 +121,7 @@ except:
 
 
 
-
+black_background_feh=None
 
 class TV_show:
     def __init__(self, name, duration=0):
@@ -385,7 +384,8 @@ class TV:
 
 
 tv = TV()
-tv.add_flash_drive(FLASH_PATH)
+tv.add_flash_drive('/media/pi/ASUS_HDD')
+tv.add_flash_drive('/media/pi/UUI')
 
 tv.play(1)
 
